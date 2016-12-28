@@ -1,0 +1,898 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>モナドって結局何なのよ? &mdash; join to Monad v0.1.3 documentation</title>
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="static/translations.js"></script>
+    <link rel="top" title="join to Monad v0.1.3 documentation" href="index.html" />
+    <link rel="prev" title="join to Monad" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>ナビゲーション</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="総合索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="index.html" title="join to Monad"
+             accesskey="P">前へ</a> |</li>
+        <li><a href="index.html">join to Monad v0.1.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="id1">
+<h1>モナドって結局何なのよ?<a class="headerlink" href="#id1" title="このヘッドラインへのパーマリンク">¶</a></h1>
+<p>Haskell を勉強しようとすると必ず「モナド」ってのが出てきます。困ったものです。数学とか圏論とか関係があるらしくって、何が書いてあるんだか分からなくって嫌になってしまいます。でもね、Haskell って凄いらしいじゃないですか、格好良いらしいじゃないですか。ここはちょっとがんばって色々考えてみましょう。</p>
+<div class="section" id="haskell">
+<h2>そもそも Haskell って何なのよ?<a class="headerlink" href="#haskell" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>何なんでしょうね、Haskell って。コンピュータ言語らしいんです、あ、それは分かってると。良く挙げられる性質は次な感じ?:</p>
+<ul class="simple">
+<li>関数型言語</li>
+<li>強い型付け</li>
+<li>遅延評価</li>
+<li>参照透過</li>
+</ul>
+<p>ここでちょっと型に関して見てみましょう。試しに Haskell の実装の 1 つである Hugs で 1 について考えてみます。Hugs では :type や :info というコマンドで hugs に型の情報などを質問することができます。例えば、Haskell にとって 1 って何でしょう?:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="o">$</span> <span class="n">hugs</span>
+<span class="nf">__</span>   <span class="n">__</span> <span class="n">__</span>  <span class="n">__</span>  <span class="n">____</span>   <span class="n">___</span>      <span class="n">_________________________________________</span>
+<span class="o">||</span>   <span class="o">||</span> <span class="o">||</span>  <span class="o">||</span> <span class="o">||</span>  <span class="o">||</span> <span class="o">||</span><span class="n">__</span>      <span class="kt">Hugs</span> <span class="mi">98</span><span class="kt">:</span> <span class="kt">Based</span> <span class="n">on</span> <span class="n">the</span> <span class="kt">Haskell</span> <span class="mi">98</span> <span class="n">standard</span>
+<span class="o">||</span><span class="n">___</span><span class="o">||</span> <span class="o">||</span><span class="n">__</span><span class="o">||</span> <span class="o">||</span><span class="n">__</span><span class="o">||</span>  <span class="n">__</span><span class="o">||</span>     <span class="kt">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">1994</span><span class="o">-</span><span class="mi">2005</span>
+<span class="o">||---||</span>         <span class="n">___</span><span class="o">||</span>           <span class="kt">World</span> <span class="kt">Wide</span> <span class="kt">Web:</span> <span class="n">http</span><span class="kt">://</span><span class="n">haskell</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">hugs</span>
+<span class="o">||</span>   <span class="o">||</span>                         <span class="kt">Bugs:</span> <span class="n">http</span><span class="kt">://</span><span class="n">hackage</span><span class="o">.</span><span class="n">haskell</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">trac</span><span class="o">/</span><span class="n">hugs</span>
+<span class="o">||</span>   <span class="o">||</span> <span class="kt">Version:</span> <span class="kt">September</span> <span class="mi">2006</span> <span class="n">_________________________________________</span>
+
+<span class="kt">Haskell</span> <span class="mi">98</span> <span class="n">mode</span><span class="kt">:</span> <span class="kt">Restart</span> <span class="n">with</span> <span class="n">command</span> <span class="n">line</span> <span class="n">option</span> <span class="o">-</span><span class="mi">98</span> <span class="n">to</span> <span class="n">enable</span> <span class="n">extensions</span>
+
+<span class="kt">Type</span> <span class="kt">:?</span> <span class="n">for</span> <span class="n">help</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="mi">1</span>
+<span class="mi">1</span> <span class="ow">::</span> <span class="kt">Num</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span>
+</pre></div>
+</div>
+<p>もぉいきなり分かりません。何でしょう Num ってのは。分からないことはどんどん聞いていきましょう:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">info</span> <span class="kt">Num</span>
+<span class="c1">-- type class</span>
+<span class="kr">infixl</span> <span class="mi">6</span> <span class="o">+</span>
+<span class="kr">infixl</span> <span class="mi">6</span> <span class="o">-</span>
+<span class="kr">infixl</span> <span class="mi">7</span> <span class="o">*</span>
+<span class="kr">class</span> <span class="p">(</span><span class="kt">Eq</span> <span class="n">a</span><span class="p">,</span> <span class="kt">Show</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=&gt;</span> <span class="kt">Num</span> <span class="n">a</span> <span class="kr">where</span>
+  <span class="p">(</span><span class="o">+</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="n">negate</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="n">abs</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="n">signum</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="n">fromInteger</span> <span class="ow">::</span> <span class="kt">Integer</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="n">fromInt</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+
+<span class="c1">-- instances:</span>
+<span class="kr">instance</span> <span class="kt">Num</span> <span class="kt">Int</span>
+<span class="kr">instance</span> <span class="kt">Num</span> <span class="kt">Integer</span>
+<span class="kr">instance</span> <span class="kt">Num</span> <span class="kt">Float</span>
+<span class="kr">instance</span> <span class="kt">Num</span> <span class="kt">Double</span>
+<span class="kr">instance</span> <span class="kt">Integral</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="kt">Num</span> <span class="p">(</span><span class="kt">Ratio</span> <span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>なるほど、Num というのは type class だそうです。type class?</p>
+</div>
+<div class="section" id="type-class">
+<h2>type class って何なのよ? <a class="footnote-reference" href="#eagletmt" id="id2">[1]</a><a class="headerlink" href="#type-class" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>type class ってのは何だろうと思うわけですが、:info の結果の下に書いてあることで類推してみます。Num ってのは Eq と Show (多分こいつらも type class なんでしょう) の性質を満たしていて、更に (+), (-), (*) という 3 つの二項演算子と negate, abs, signum, fromInteger, fromInt という 5 つの関数が定義されている「何か」なのですね。多分こんなイメージ:</p>
+<div class="figure align-center">
+<img alt="images/Num.png" src="images/Num.png" />
+<p class="caption">:info Num のイメージ</p>
+</div>
+<p>Num っつーからには数字を抽象化した「何か」に違いなく、例えば:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">x</span> <span class="o">+</span> <span class="p">(</span><span class="n">negate</span> <span class="n">x</span><span class="p">)</span> <span class="ow">=</span> <span class="mi">0</span>     <span class="c1">-- プラスマイナス足したら 0</span>
+<span class="nf">abs</span> <span class="p">(</span><span class="n">nagete</span> <span class="n">x</span><span class="p">)</span> <span class="ow">=</span> <span class="n">abs</span> <span class="n">x</span> <span class="c1">-- マイナス付けても絶対値は変わらない</span>
+</pre></div>
+</div>
+<p>みたいなのを満たしてるに違いありません。確かに Num の Instance である Int にしろ Float にしろ 0 を持ってたりマイナスや絶対値の計算ができるわけですから、Num はそいつらの持つ共通の性質を抜き出したものに見えます。</p>
+<p>何でこんなもん用意しているかというと、同じ性質を持つ人達にまとめてレッテル貼ってひとからげに扱ってあげましょう、ということみたいです。例えば <a class="reference external" href="http://ocaml.jp/">OCaml</a> という、やはり強く型付けられているコンピュータ言語があります。OCaml ももちろん int や float という数値が入る型を持つのですが:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="o">$</span> <span class="n">ocaml</span>
+        <span class="kt">Objective</span> <span class="kt">Caml</span> <span class="n">version</span> <span class="mf">3.11</span><span class="o">.</span><span class="mi">2</span>
+
+<span class="o">#</span> <span class="mi">1</span><span class="p">;;</span>
+<span class="o">-</span> <span class="kt">:</span> <span class="n">int</span> <span class="ow">=</span> <span class="mi">1</span>
+<span class="o">#</span> <span class="mf">1.0</span><span class="p">;;</span>
+<span class="o">-</span> <span class="kt">:</span> <span class="n">float</span> <span class="ow">=</span> <span class="mi">1</span><span class="o">.</span>
+<span class="o">#</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;;</span>
+<span class="o">-</span> <span class="kt">:</span> <span class="n">int</span> <span class="ow">=</span> <span class="mi">2</span>
+<span class="o">#</span> <span class="mi">1</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">;;</span>
+<span class="kt">Error:</span> <span class="kt">This</span> <span class="n">expression</span> <span class="n">has</span> <span class="kr">type</span> <span class="n">float</span> <span class="n">but</span> <span class="n">an</span> <span class="n">expression</span> <span class="n">was</span> <span class="n">expected</span> <span class="kr">of</span> <span class="kr">type</span>
+         <span class="n">int</span>
+<span class="o">#</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">;;</span>
+<span class="kt">Error:</span> <span class="kt">This</span> <span class="n">expression</span> <span class="n">has</span> <span class="kr">type</span> <span class="n">float</span> <span class="n">but</span> <span class="n">an</span> <span class="n">expression</span> <span class="n">was</span> <span class="n">expected</span> <span class="kr">of</span> <span class="kr">type</span>
+         <span class="n">int</span>
+</pre></div>
+</div>
+<p>1 は int として、1.0 は float として解釈されてます。int を足すには (+) を使いますが、int と folat は足せません。いわんや int と float をや。じゃぁ float と float なら足せるの? というとやっぱりそれもダメなのです。(+) は int と int を足す為のものなのです。じゃぁどうするのか?:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="o">#</span> <span class="mf">1.0</span> <span class="o">+.</span> <span class="mf">1.0</span><span class="p">;;</span>
+<span class="o">-</span> <span class="kt">:</span> <span class="n">float</span> <span class="ow">=</span> <span class="mi">2</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>その為には (+.) という別の演算子が用意されているのです。ΩΩ Ω。びっくりしましたか? 私は最初に聞いたときはびっくりしましたがもぉ慣れました。慣れというのは時には偉大なものです。そして OCaml は素敵なものです。</p>
+<p>OCaml は強い型付けをしていて、int と float の為に (+) と (+.) という別々の関数を用意しました (float 用はまだまだあります、(-.) とか (*.) とか (/.) とか)。その頃 Haskell はどうしたかというと:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="mi">1</span>
+<span class="mi">1</span> <span class="ow">::</span> <span class="kt">Num</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="mf">1.0</span>
+<span class="mf">1.0</span> <span class="ow">::</span> <span class="kt">Fractional</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">::</span> <span class="kt">Num</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="mf">1.0</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">::</span> <span class="kt">Fractional</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">1.0</span>
+<span class="mf">1.0</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="ow">::</span> <span class="kt">Fractional</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span>
+</pre></div>
+</div>
+<p>え、Fractional?:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">info</span> <span class="kt">Fractional</span>
+<span class="c1">-- type class</span>
+<span class="kr">infixl</span> <span class="mi">7</span> <span class="o">/</span>
+<span class="kr">class</span> <span class="kt">Num</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="kt">Fractional</span> <span class="n">a</span> <span class="kr">where</span>
+  <span class="p">(</span><span class="o">/</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="n">recip</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="n">fromRational</span> <span class="ow">::</span> <span class="kt">Rational</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+  <span class="n">fromDouble</span> <span class="ow">::</span> <span class="kt">Double</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+
+<span class="c1">-- instances:</span>
+<span class="kr">instance</span> <span class="kt">Fractional</span> <span class="kt">Float</span>
+<span class="kr">instance</span> <span class="kt">Fractional</span> <span class="kt">Double</span>
+<span class="kr">instance</span> <span class="kt">Integral</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="kt">Fractional</span> <span class="p">(</span><span class="kt">Ratio</span> <span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>ほうほう。Fractional という type class があるんだけどそれは Num が元になっていて、更に (/) と recip と fromRational と fromDouble が加わってるものだと。Float や Dobule は Fractional の instance であると。</p>
+<div class="figure align-center">
+<img alt="images/Fractional.png" src="images/Fractional.png" />
+<p class="caption">:info Fractional のイメージ</p>
+</div>
+<p>えー、じゃぁ型はどこに行っちゃったの? というと:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">::</span> <span class="kt">Int</span>
+<span class="mi">1</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">::</span> <span class="kt">Float</span>
+<span class="mf">1.0</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">::</span> <span class="kt">Int</span>
+<span class="kt">ERROR</span> <span class="o">-</span> <span class="kt">Cannot</span> <span class="n">infer</span> <span class="kr">instance</span>
+<span class="o">***</span> <span class="kt">Instance</span>   <span class="kt">:</span> <span class="kt">Fractional</span> <span class="kt">Int</span>
+<span class="o">***</span> <span class="kt">Expression</span> <span class="kt">:</span> <span class="mf">1.0</span>
+
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">::</span> <span class="kt">Float</span>
+<span class="mf">1.0</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span> <span class="ow">::</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="ow">::</span> <span class="kt">Int</span><span class="p">)</span>
+<span class="mi">2</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span> <span class="ow">::</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="ow">::</span> <span class="kt">Float</span><span class="p">)</span>
+<span class="kt">ERROR</span> <span class="o">-</span> <span class="kt">Type</span> <span class="ne">error</span> <span class="kr">in</span> <span class="n">application</span>
+<span class="o">***</span> <span class="kt">Expression</span>     <span class="kt">:</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="o">***</span> <span class="kt">Term</span>           <span class="kt">:</span> <span class="mi">1</span>
+<span class="o">***</span> <span class="kt">Type</span>           <span class="kt">:</span> <span class="kt">Int</span>
+<span class="o">***</span> <span class="kt">Does</span> <span class="n">not</span> <span class="n">match</span> <span class="kt">:</span> <span class="kt">Float</span>
+
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span> <span class="ow">::</span> <span class="kt">Float</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="ow">::</span> <span class="kt">Float</span><span class="p">)</span>
+<span class="mf">2.0</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="p">(</span><span class="o">+</span><span class="p">)</span>
+<span class="p">(</span><span class="o">+</span><span class="p">)</span> <span class="ow">::</span> <span class="kt">Num</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+</pre></div>
+</div>
+<p>ほほぉ、1 は Num として解釈されていましたが、Num の instance である Int や Float として型が確定できると。1.0 は Fractional として解釈されるから Int には戻れないけど Float にならなれると。でも Fractional は元に Num があるから (+) とか (-) が使えてしまうのですね。そして、さっき見たように 1 + 1.0 なら Fractional に合わせてくれる。型の確定まで遅延されている! 何かまどろっこしいけどカッコイイよ type class!!</p>
+<p>Haskell は type class というのを用意することによって、強い型付けを持ちつつも同じ演算子・関数を複数の似たような型に対して使えるようにしてくれました。</p>
+<ul class="simple">
+<li>有理数は体だけどその前に環であり群だし、加法の記号は一々切り替えたくないよね!</li>
+<li>Interface を用意しといて implement! polymorphism!!</li>
+<li>似たような機能は一箇所に集めておくのが DRY (Don&#8217;t repeat yourself) だよね! (や、それはまた別)</li>
+<li>仕事のメールには「仕事」ってタグが付いてるけどその中から支払い関連を検索して更に「支払い」ってタグ付けよう!</li>
+</ul>
+<p>何でもいいですが、異なる対象に対して同じ名前でアクセスできるのはとても便利そうです。</p>
+<div class="section" id="monad">
+<h3>数字のことはいいから Monad はどうなったのよ<a class="headerlink" href="#monad" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>はい、Monad のことを忘れてました。Haskell で Monad といったら Maybe Monad です。大抵の入門では Monad として最初に Maybe が出てきます。たまに List が最初のときがあって、酷いやつだと最初に IO が出てきます。Maybe のこと知りたかったら聞きますよね:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">info</span> <span class="kt">Maybe</span>
+<span class="c1">-- type constructor</span>
+<span class="kr">data</span> <span class="kt">Maybe</span> <span class="n">a</span>
+
+<span class="c1">-- constructors:</span>
+<span class="kt">Nothing</span> <span class="ow">::</span> <span class="kt">Maybe</span> <span class="n">a</span>
+<span class="kt">Just</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="kt">Maybe</span> <span class="n">a</span>
+
+<span class="c1">-- instances:</span>
+<span class="kr">instance</span> <span class="kt">Functor</span> <span class="kt">Maybe</span>
+<span class="kr">instance</span> <span class="kt">Monad</span> <span class="kt">Maybe</span>
+<span class="kr">instance</span> <span class="kt">Eq</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="kt">Eq</span> <span class="p">(</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">)</span>
+<span class="kr">instance</span> <span class="kt">Ord</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="kt">Ord</span> <span class="p">(</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">)</span>
+<span class="kr">instance</span> <span class="kt">Read</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="kt">Read</span> <span class="p">(</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">)</span>
+<span class="kr">instance</span> <span class="kt">Show</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="kt">Show</span> <span class="p">(</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>ありました、Monad。Maybe は Monad の instance らしい。ということは Haskell に聞けばいいはずで、聞いてみると:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">info</span> <span class="kt">Monad</span>
+<span class="c1">-- constructor class</span>
+<span class="kr">infixl</span> <span class="mi">1</span> <span class="o">&gt;&gt;=</span>
+<span class="kr">infixl</span> <span class="mi">1</span> <span class="o">&gt;&gt;</span>
+<span class="kr">class</span> <span class="kt">Monad</span> <span class="n">a</span> <span class="kr">where</span>
+  <span class="n">return</span> <span class="ow">::</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+  <span class="p">(</span><span class="o">&gt;&gt;=</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+  <span class="p">(</span><span class="o">&gt;&gt;</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+  <span class="n">fail</span> <span class="ow">::</span> <span class="kt">String</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+
+<span class="c1">-- instances:</span>
+<span class="kr">instance</span> <span class="kt">Monad</span> <span class="kt">Maybe</span>
+<span class="kr">instance</span> <span class="kt">Monad</span> <span class="kt">[]</span>
+<span class="kr">instance</span> <span class="kt">Monad</span> <span class="kt">IO</span>
+</pre></div>
+</div>
+<p>あら、意外とシンプル。Monad というのは 2 つの演算子 (&gt;&gt;=), (&gt;&gt;)、それと 2 つの関数 return, fail が定義されているだけのものだそうです。Num と比べると随分少ない。Num は 3 個と 5 個でした。この 4 つのことが分かれば Monad が分かる!! と信じてちょっと調べてみましょう。</p>
+<p>と思ったんだけど、色々とずるをしましょう。先ず fail:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">fail</span> <span class="ow">::</span> <span class="kt">String</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+</pre></div>
+</div>
+<p><a class="reference external" href="http://book.realworldhaskell.org/read/monads.html">fail は使うな</a> っておじいちゃんが言ってましたし、ただエラー吐くだけの為のものみたいなので無視しちゃいましょう、無視無視。</p>
+<p>(&gt;&gt;) なんですが、これは (&gt;&gt;=) を使って書けます:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">x</span> <span class="o">&gt;&gt;</span> <span class="n">y</span> <span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="nf">\</span><span class="kr">_</span> <span class="ow">-&gt;</span> <span class="n">y</span>
+</pre></div>
+</div>
+<p>x を評価してその結果は使わずに y を評価してね、って意味なんですが今は意味は置いといて、単なる略記法なんだということだけ認めて次に進んでしまいましょう。</p>
+<p>残るは (&gt;&gt;=) と return です。</p>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>Monad って何なのよ?<a class="headerlink" href="#id3" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>Monad とは何か、というのは (&gt;&gt;=) と return が分かれば良さそうな気がしてきました。で、ここで Monad とは何かを簡単にまとめたものを発表してみましょう。</p>
+<blockquote>
+<p>Monad とは、</p>
+<ul class="simple">
+<li>中にモノが入れられる箱で</li>
+<li>(一般には) 一度中にモノを入れたら取り出せないけど</li>
+<li>箱の中の箱の中のモノは箱の中には取り出せる</li>
+</ul>
+<p>もの。</p>
+</blockquote>
+<p>何だこれは、さっぱり分からない。でもまぁ、これを念頭に見ていくので一度くらい音読しておきましょう。「もなどとはぁ〜」</p>
+<div class="section" id="return">
+<h3>return は箱に入れること<a class="headerlink" href="#return" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>return :: Monad a =&gt; b -&gt; a b は、引数を Monad の中につっこみます。こんなイメージ</p>
+<div class="figure align-center">
+<img alt="images/return.png" src="images/return.png" />
+<p class="caption">return のイメージ</p>
+</div>
+<p>箱っつーことで a かましたら四角で囲ってみることにしました。で、実際 hugs だとどうなるかというと:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="n">return</span> <span class="mi">1</span>
+<span class="kt">ERROR</span> <span class="o">-</span> <span class="kt">Unresolved</span> <span class="n">overloading</span>
+<span class="o">***</span> <span class="kt">Type</span>       <span class="kt">:</span> <span class="kt">Monad</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span> <span class="kt">Integer</span>
+<span class="o">***</span> <span class="kt">Expression</span> <span class="kt">:</span> <span class="n">return</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>おぉっと、怒られてしまいました。return だけやったら文脈分からんやないけ、ということでしょうか:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="n">return</span> <span class="mi">1</span> <span class="ow">::</span> <span class="kt">Maybe</span> <span class="kt">Int</span>
+<span class="kt">Just</span> <span class="mi">1</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="n">return</span> <span class="mi">1</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>ほっ。return だけだと文脈が分からないので型を指定してやらないといけないのが切ないですが。入れようと思えばいくらでも入れられます。:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="n">return</span> <span class="p">(</span><span class="n">return</span> <span class="p">(</span><span class="n">return</span> <span class="mi">1</span><span class="p">))</span> <span class="ow">::</span> <span class="kt">Maybe</span> <span class="p">(</span><span class="kt">Maybe</span> <span class="p">(</span><span class="kt">Maybe</span> <span class="kt">Int</span><span class="p">))</span>
+<span class="kt">Just</span> <span class="p">(</span><span class="kt">Just</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">1</span><span class="p">))</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="n">return</span> <span class="p">(</span><span class="n">return</span> <span class="p">(</span><span class="n">return</span> <span class="mi">1</span><span class="p">))</span> <span class="ow">::</span> <span class="p">[[[</span><span class="kt">Int</span><span class="p">]]]</span>
+<span class="p">[[[</span><span class="mi">1</span><span class="p">]]]</span>
+</pre></div>
+</div>
+<p>イメージでいうとこんな感じね</p>
+<div class="figure align-center">
+<img alt="images/return_twice.png" src="images/return_twice.png" />
+<p class="caption">return を 2 回</p>
+</div>
+<p>二回すると二回囲うのね。</p>
+<p>どちらも、Int のメンバーを Maybe Int や [Int] といった新天地に導いてくれています。新天地なのでもちろん知らない人達もいるわけです。例えば:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="kt">Nothing</span>
+<span class="kt">Nothing</span> <span class="ow">::</span> <span class="kt">Maybe</span> <span class="n">a</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="kt">[]</span>
+<span class="kt">[]</span> <span class="ow">::</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="ow">::</span> <span class="kt">Num</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>なんて人達は新天地にしか住んでいない人達で、Int と return からだけでは作れません。とある型を Monad である何かに入れることによって機能拡張してあげようというわけですね。そして古い世界から新天地へと引き上げてくれるのが return です。イメージで上に向かってるのも新天地だからポジティヴな気分で!!</p>
+<p>あ、ちなみに、Maybe なら return = Just、List なら return = (:[]) ですねっ!</p>
+</div>
+<div class="section" id="liftm">
+<h3>箱に入れたら liftM でアクセス!!<a class="headerlink" href="#liftm" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>新天地には降りたってみたものの、そのままでは困ったことが起きてしまいます:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">)</span> <span class="mi">1</span>
+<span class="mi">2</span>
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">)</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">1</span><span class="p">)</span>
+<span class="kt">ERROR</span> <span class="o">-</span> <span class="kt">Cannot</span> <span class="n">infer</span> <span class="kr">instance</span>
+<span class="o">***</span> <span class="kt">Instance</span>   <span class="kt">:</span> <span class="kt">Num</span> <span class="p">(</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">)</span>
+<span class="o">***</span> <span class="kt">Expression</span> <span class="kt">:</span> <span class="mi">1</span> <span class="o">+</span> <span class="kt">Just</span> <span class="mi">1</span>
+
+<span class="kt">Hugs</span><span class="o">&gt;</span> <span class="p">((</span><span class="kt">Just</span> <span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="p">)</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">1</span><span class="p">)</span>
+<span class="kt">ERROR</span> <span class="o">-</span> <span class="kt">Cannot</span> <span class="n">infer</span> <span class="kr">instance</span>
+<span class="o">***</span> <span class="kt">Instance</span>   <span class="kt">:</span> <span class="kt">Num</span> <span class="p">(</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">)</span>
+<span class="o">***</span> <span class="kt">Expression</span> <span class="kt">:</span> <span class="kt">Just</span> <span class="mi">1</span> <span class="o">+</span> <span class="kt">Just</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>Int のままだったら (+) で足し算できたのに、Maybe に入れてしまったが為に足し算できなくなってしまいました。恐るべし型付け。このままでは Maybe Int 用にまた一から関数を定義しなくてはいけないのか!? そうではなくて、既存の Int 関連の関数を Maybe など Monad という箱の中に入れる関数が用意されています。:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Hugs</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">load</span> <span class="kt">Monad</span>
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="n">liftM</span>
+<span class="nf">liftM</span> <span class="ow">::</span> <span class="kt">Monad</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+</pre></div>
+</div>
+<p>lift! M は Monad の M ですね、きっと。liftM は b -&gt; c という関数を a b -&gt; a c という関数に変換してくれてます。a は Monad、つまり新天地なので、b -&gt; c を新天地へと導いて活躍させてあげようというわけです。ありがたやありがたや。</p>
+<p>これまたイメージを描いておくと</p>
+<div class="figure align-center">
+<img alt="images/liftM.png" src="images/liftM.png" />
+<p class="caption">liftM のイメージ</p>
+</div>
+<p>lift ってことで f が新天地へと持ち上げられてますね。liftM の結果も四角で囲うことにしちゃいました。</p>
+<p>で、具体的にどう使うのよ、というと:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">liftM</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">)</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">1</span><span class="p">)</span>
+<span class="kt">Just</span> <span class="mi">2</span>
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">liftM</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">)</span> <span class="p">[</span><span class="mi">0</span><span class="o">..</span><span class="mi">9</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span>
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">liftM</span> <span class="n">return</span> <span class="p">[</span><span class="mi">0</span><span class="o">..</span><span class="mi">9</span><span class="p">]</span> <span class="ow">::</span> <span class="p">[[</span><span class="kt">Int</span><span class="p">]]</span>
+<span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">],[</span><span class="mi">4</span><span class="p">],[</span><span class="mi">5</span><span class="p">],[</span><span class="mi">6</span><span class="p">],[</span><span class="mi">7</span><span class="p">],[</span><span class="mi">8</span><span class="p">],[</span><span class="mi">9</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>新天地のそのまた新天地なんていう遥か彼方へとあの人が旅立ってしまったとしても:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">liftM</span> <span class="p">(</span><span class="n">liftM</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">))</span> <span class="p">(</span><span class="kt">Just</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">1</span><span class="p">))</span>
+<span class="kt">Just</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>liftM を繰り返すことによって箱の中の中へと手が届くようになっています。</p>
+<p>これで、新天地でも昔と同じようなことができるようになりました。</p>
+</div>
+<div class="section" id="join">
+<h3>(&gt;&gt;=) は分かりづらいから join にしよう<a class="headerlink" href="#join" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>次に (&gt;&gt;=) を説明しないといけないんですが、止めましょう。(&gt;&gt;=) は説明しづらいです、私にはできません。なので代わりに先ず join を説明します。join って何だ?:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Monad</span><span class="o">&gt;</span> <span class="kt">:</span><span class="kr">type</span> <span class="n">join</span>
+<span class="nf">join</span> <span class="ow">::</span> <span class="kt">Monad</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span> <span class="p">(</span><span class="n">a</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+</pre></div>
+</div>
+<p>join を使って後で (&gt;&gt;=) のこと説明するからちょっと待っててね。</p>
+</div>
+<div class="section" id="id4">
+<h3>join は箱を剥すこと<a class="headerlink" href="#id4" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>join の型を見ると、二重になっている Monad が一重になっています。こ、これは、剥がしている! というわけでこんなイメージ</p>
+<div class="figure align-center">
+<img alt="images/join.png" src="images/join.png" />
+<p class="caption">join のイメージ</p>
+</div>
+<p>Maybe や List で見てみると:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">join</span> <span class="p">(</span><span class="kt">Just</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">2</span><span class="p">))</span>
+<span class="kt">Just</span> <span class="mi">2</span>
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">join</span> <span class="p">(</span><span class="kt">Just</span> <span class="p">(</span><span class="kt">Just</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">2</span><span class="p">)))</span>
+<span class="kt">Just</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">2</span><span class="p">)</span>
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">join</span> <span class="p">[[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">]]</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span>
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">join</span> <span class="p">[[[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]]]</span>
+<span class="p">[[</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>うん、剥がしてる。もっというと、外側から二枚掴んで内側の箱を剥がしてる、それが Maybe だと分かりづらいですが List の場合には見てとれると思います。Maybe の場合は 2 つ続いている Just を 1 つにしているし、List の場合は外側から二枚目のリストを外して平にしたリストを返しています。これは concat のことですね:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Monad</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="n">concat</span>
+<span class="nf">concat</span> <span class="ow">::</span> <span class="p">[[</span><span class="n">a</span><span class="p">]]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>残念なことに? join の定義を見ると引数は、a (a b) となっているので、二重の箱に入っていなくてはいけません。箱が一重のときに join を適用しようとしても怒られてしまいます:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">join</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">3</span><span class="p">)</span>
+<span class="kt">ERROR</span> <span class="o">-</span> <span class="kt">Cannot</span> <span class="n">infer</span> <span class="kr">instance</span>
+<span class="o">***</span> <span class="kt">Instance</span>   <span class="kt">:</span> <span class="kt">Num</span> <span class="p">(</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">)</span>
+<span class="o">***</span> <span class="kt">Expression</span> <span class="kt">:</span> <span class="n">join</span> <span class="p">(</span><span class="kt">Just</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">join</span> <span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="kt">ERROR</span> <span class="o">-</span> <span class="kt">Cannot</span> <span class="n">infer</span> <span class="kr">instance</span>
+<span class="o">***</span> <span class="kt">Instance</span>   <span class="kt">:</span> <span class="kt">Num</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span>
+<span class="o">***</span> <span class="kt">Expression</span> <span class="kt">:</span> <span class="n">join</span> <span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>一度覚えた贅沢は忘れられない、ことを表現したいのかもしれません。はたまた黄泉戸喫してしまった伊邪那美命のようなものか。あなどりがたし、join。</p>
+<p>というわけで</p>
+<ul class="simple">
+<li>(一般には) 一度中にモノを入れたら取り出せないけど</li>
+<li>箱の中の箱の中のモノは箱の中には取り出せる</li>
+</ul>
+<p>わけです。(一般には) って付けてるのは、Just 3 からは 3 はそりゃ取り出せますけど Nothing からは何も出てこないし、[1] からは 1 出せるし head [1,2,3] は 1 かもしれませけど、[1,2,3] から 1,2,3 を取り出すって、意味分かりませんもんね。あと、Haskell 的には副作用は IO の中に閉じ込めておきたいので、IO から何か取り出そうとすると「おいおい」って言われるわけです。</p>
+<p>と思ったら、Nothing はいくら join してもいいみたい:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Monad</span><span class="o">&gt;</span> <span class="n">join</span> <span class="kt">Nothing</span>
+<span class="kt">Nothing</span>
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="n">join</span><span class="p">)</span> <span class="kt">Nothing</span>
+<span class="kt">Nothing</span>
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span><span class="p">)</span> <span class="kt">Nothing</span>
+<span class="kt">Nothing</span>
+<span class="kt">Monad</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span><span class="p">)</span> <span class="kt">Nothing</span>
+<span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="n">join</span><span class="p">)</span> <span class="kt">Nothing</span> <span class="ow">::</span> <span class="kt">Maybe</span> <span class="n">a</span>
+</pre></div>
+</div>
+<p>まぁ Maybe が入れ子になってたら一番外側の Maybe で Nothing のとき Maybe の深さなんて分からないか、と思ったけど型が Maybe a ってなってる。何で??</p>
+</div>
+<div class="section" id="id5">
+<h3>ここまでまとめ<a class="headerlink" href="#id5" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>私達は次の 3 つの関数を手に入れた:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">return</span> <span class="ow">::</span> <span class="kt">Monad</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+<span class="nf">liftM</span>  <span class="ow">::</span> <span class="kt">Monad</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+<span class="nf">join</span>   <span class="ow">::</span> <span class="kt">Monad</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="n">a</span> <span class="p">(</span><span class="n">a</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+</pre></div>
+</div>
+<p>それぞれ</p>
+<ul class="simple">
+<li>箱の中にモノを入れる</li>
+<li>箱の中のモノに関数を適用する</li>
+<li>二重になってる箱を一重にする</li>
+</ul>
+<p>という機能を持っている。</p>
+<p>で、この 3 つのセットのことを Monad と言いたい!! まぁ言いたきゃ言えばいいのかもしれませんが、もう少し良い性質を持つときに Monad と呼んであげることに世間ではなっているようなのでもう少し我慢してみましょう。</p>
+</div>
+<div class="section" id="return-liftm-join">
+<h3>return と liftM と join の○○な関係<a class="headerlink" href="#return-liftm-join" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>さてさて、Monad ってのは不思議な箱で</p>
+<ul class="simple">
+<li>入れるのに return</li>
+<li>中身をいじるのに liftM</li>
+<li>過剰包装を剥ぐのに join</li>
+</ul>
+<p>を使うというものでした。これらの操作が沢山繰り返されるわけですが、例えば</p>
+<blockquote>
+「入れて入れて剥いだら、入れた状態に戻ってた方が良ぐね?」</blockquote>
+<p>って思ったりしませんか? というわけで Monad を使い易くする為に幾つかのルールが設定されているのでそれを見ていきましょう。</p>
+<p>まずは次の 2 つ、Monad a と f :: b -&gt; c に対して:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">.</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">return</span> <span class="o">.</span> <span class="n">f</span>               <span class="ow">::</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+<span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">.</span> <span class="n">join</span>   <span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">))</span> <span class="ow">::</span> <span class="n">a</span> <span class="p">(</span><span class="n">a</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+</pre></div>
+</div>
+<p>は、それぞれ</p>
+<ul class="simple">
+<li>「箱の中に入れてから f でいじる」=「f でいじってから箱の中に入れる」</li>
+<li>「1つ箱を剥がしてから中を f でいじる」=「中の中のを f でいじってから1つ箱を剥がす」</li>
+</ul>
+<p>という意味になっています。この辺りの操作は順番に依らずにいて欲しいものですよね。イメージで見るとこんな感じ</p>
+<div class="figure align-center">
+<img alt="images/return_join_liftM.png" src="images/return_join_liftM.png" />
+<p class="caption">return と join と liftM に満たしてほしい関係</p>
+</div>
+<p>2 つの四角の中に 2 つずつ赤い道が示してありますが、どっちの道を通っても結果は同じですよ、ということで、真ん中にある「くるん」としてる矢印でもそれを表してるつもりです。</p>
+<p>Maybe や List というのはシンプルな Monad なので確かめるのも簡単です。例えば List の場合を見ると:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">((</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">.</span> <span class="n">return</span><span class="p">)</span> <span class="n">x</span> <span class="ow">=</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="ow">=</span> <span class="p">[</span><span class="n">f</span> <span class="n">x</span><span class="p">]</span> <span class="ow">=</span> <span class="n">return</span> <span class="p">(</span><span class="n">f</span> <span class="n">x</span><span class="p">)</span> <span class="ow">=</span> <span class="p">(</span><span class="n">return</span> <span class="o">.</span> <span class="n">f</span><span class="p">)</span> <span class="n">x</span><span class="p">,</span>
+
+<span class="p">((</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">.</span> <span class="n">join</span><span class="p">)</span> <span class="p">[[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">w</span><span class="p">]]</span> <span class="ow">=</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">w</span><span class="p">]</span> <span class="ow">=</span> <span class="p">[</span><span class="n">f</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span> <span class="n">z</span><span class="p">,</span> <span class="n">f</span> <span class="n">w</span><span class="p">],</span>
+
+<span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)))</span> <span class="p">[[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">w</span><span class="p">]]</span> <span class="ow">=</span> <span class="n">join</span> <span class="p">[</span><span class="n">liftM</span> <span class="n">f</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">liftM</span> <span class="n">f</span> <span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">w</span><span class="p">]]</span>
+  <span class="ow">=</span> <span class="n">join</span> <span class="p">[</span> <span class="p">[</span><span class="n">f</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">f</span> <span class="n">z</span><span class="p">,</span> <span class="n">f</span> <span class="n">w</span><span class="p">]]</span> <span class="ow">=</span> <span class="p">[</span><span class="n">f</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span> <span class="n">z</span><span class="p">,</span> <span class="n">f</span> <span class="n">w</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>みたいな感じになっています。雰囲気だけですが。</p>
+<p>更に、Monad であるからには満たして欲しい関係が 3 つ(3 つも!!) あります。Monad a に対し:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">join</span> <span class="o">.</span> <span class="n">return</span>         <span class="ow">=</span> <span class="n">id</span>        <span class="ow">::</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+<span class="nf">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">return</span><span class="p">)</span> <span class="ow">=</span> <span class="n">id</span>        <span class="ow">::</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+<span class="nf">join</span> <span class="o">.</span> <span class="n">join</span> <span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">join</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="p">(</span><span class="n">a</span> <span class="p">(</span><span class="n">a</span> <span class="n">b</span><span class="p">))</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+</pre></div>
+</div>
+<p>この 3 つはいわゆる Monad 則になってるんですが、上の 2 つは既に箱の中に入ってるものへの操作で</p>
+<ul class="simple">
+<li>更に箱に入れて直ぐに剥いだら元に戻る</li>
+<li>箱の中のものを箱に入れて、その外側から剥いだら元に戻る</li>
+</ul>
+<p>最後の 1 つは三重になっている箱に対して</p>
+<ul class="simple">
+<li>「外側から順番に剥がす」=「内側から順番に剥がす」</li>
+</ul>
+<p>と言っています。内の方から剥がせるなんて何て器用な、とも思いますが、まぁそれも liftM の底力。</p>
+<div class="figure align-center">
+<img alt="images/left_and_right_unit.png" src="images/left_and_right_unit.png" />
+<p class="caption">join . return = id と join . (liftM return) = id</p>
+</div>
+<div class="figure align-center">
+<img alt="images/associative.png" src="images/associative.png" />
+<p class="caption">join . join = join . (liftM join)</p>
+</div>
+<p>数学嫌と言いながらいつの間にか数学になっちゃってるんですが、最初の 2 つに関しては:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="n">return</span><span class="p">)</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="ow">=</span> <span class="n">join</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]]</span> <span class="ow">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span>
+<span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">return</span><span class="p">))</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="ow">=</span> <span class="n">join</span> <span class="p">[[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">]]</span> <span class="ow">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>みたいなことですね。最後のやつは:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="n">join</span><span class="p">)</span> <span class="p">[[[</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]],[[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]]]</span>
+<span class="ow">=</span> <span class="n">join</span> <span class="p">[[</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]]</span>
+<span class="ow">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span>
+
+<span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">join</span><span class="p">))</span> <span class="p">[[[</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]],[[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]]]</span>
+<span class="ow">=</span> <span class="n">join</span> <span class="p">[</span><span class="n">join</span> <span class="p">[[</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]],</span> <span class="n">join</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]]]</span>
+<span class="ow">=</span> <span class="n">join</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]]</span>
+<span class="ow">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>まぁ、そりゃどっちも同じになりますよね。でも一応手順が違うんだけど結果が同じになってるところだけお楽しみ下さい。</p>
+</div>
+<div class="section" id="id6">
+<h3>Monad とは<a class="headerlink" href="#id6" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>Haskell における Monad とは、type class であって Monad a に対して関数:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">return</span> <span class="ow">::</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+<span class="nf">liftM</span> <span class="ow">::</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+<span class="nf">join</span> <span class="ow">::</span> <span class="n">a</span> <span class="p">(</span><span class="n">a</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+</pre></div>
+</div>
+<p>の 3 つの関数が定義されていているもの。で、コンパイラなどではチェックされないけれども、関数達の関係式:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">.</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">return</span> <span class="o">.</span> <span class="n">f</span>
+<span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">.</span> <span class="n">join</span> <span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>及び:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">join</span> <span class="o">.</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">id</span>
+<span class="nf">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">return</span><span class="p">)</span> <span class="ow">=</span> <span class="n">id</span>
+<span class="nf">join</span> <span class="o">.</span> <span class="n">join</span> <span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">join</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>が仮定されている。</p>
+<p>「おい、(&gt;&gt;=) はどこいった!」</p>
+</div>
+<div class="section" id="join-to">
+<h3>join to (&gt;&gt;=)<a class="headerlink" href="#join-to" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>覚えてましたか、(&gt;&gt;=) のこと。残念です。や、流石でいらっしゃる。安心して下さい、(&gt;&gt;=) は join で書けるんです:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span> <span class="ow">=</span> <span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">))</span> <span class="n">x</span>
+</pre></div>
+</div>
+<p>これで OK です。</p>
+<div class="figure align-center">
+<img alt="images/bind.png" src="images/bind.png" />
+<p class="caption">join から &gt;&gt;= のイメージ</p>
+</div>
+<p>何でか:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">Monad</span> <span class="n">a</span>
+<span class="nf">x</span> <span class="ow">::</span> <span class="n">a</span> <span class="n">b</span>
+<span class="nf">f</span> <span class="ow">::</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+</pre></div>
+</div>
+<p>としたときに:</p>
+<div class="highlight-haskell"><div class="highlight"><pre>      <span class="n">liftM</span> <span class="n">f</span>    <span class="ow">::</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="p">(</span><span class="n">a</span> <span class="n">c</span><span class="p">)</span>
+      <span class="n">liftM</span> <span class="n">f</span> <span class="n">x</span>  <span class="ow">::</span>        <span class="n">a</span> <span class="p">(</span><span class="n">a</span> <span class="n">c</span><span class="p">)</span>
+<span class="nf">join</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span> <span class="n">x</span><span class="p">)</span> <span class="ow">::</span>           <span class="n">a</span> <span class="n">c</span>
+</pre></div>
+</div>
+<p>なので、確かに:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="o">&gt;&gt;=</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+</pre></div>
+</div>
+<p>となっています。では、これどういう操作をしてるか見てみると、</p>
+<ul class="simple">
+<li>x の中にいる b を f でいじるのに liftM 使ったら沢山包まれちゃったんで最後に剥がした</li>
+</ul>
+<p>ですって。なるほど、(&gt;&gt;=) ってそういうことだったのか!! や、これも解釈の 1 つですが。えっ、何言ってるの? という人は今こそ <a class="reference external" href="http://www.sampou.org/haskell/a-a-monads/html/meet.html#example1">モナドの全ての例</a> を見るときがやってきました。いってらっしゃい!!</p>
+</div>
+<div class="section" id="id8">
+<h3>(&gt;&gt;=) のことをもう少し<a class="headerlink" href="#id8" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>数学なんて良く分からないなんて言っていましたが、そろそろ数学の話をしましょう。</p>
+<p>実は、liftM に関して欲しい性質を隠していました:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">liftM</span> <span class="n">id</span> <span class="ow">=</span> <span class="n">id</span>
+<span class="nf">liftM</span> <span class="p">(</span><span class="n">g</span> <span class="o">.</span> <span class="n">f</span><span class="p">)</span> <span class="ow">=</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">g</span><span class="p">)</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure align-center">
+<img alt="images/functor.png" src="images/functor.png" />
+<p class="caption">liftM の満たすべき性質</p>
+</div>
+<p>liftM は圏論の関手というやつの射に対する作用を表現するものにそっくりなのです。Data.Functor.fmap そっくりなのです。なのでこの際この性質を仮定してしまいましょう。だってまぁ、</p>
+<ul class="simple">
+<li>何もしない id で中身をいじっても何も変わらない</li>
+<li>まとめて中をいじるのも、少しずつ中をいじるのも同じ</li>
+</ul>
+<p>というのが自然だと思いませんか? 私は自然だと思います。</p>
+<p>さて、この仮定の下に x &gt;&gt;= f の f を id :: (a (a b)) -&gt; a (a b) としてみると:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">x</span> <span class="o">&gt;&gt;=</span> <span class="n">id</span> <span class="ow">=</span> <span class="n">join</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">id</span> <span class="n">x</span><span class="p">)</span> <span class="ow">=</span> <span class="n">join</span> <span class="n">x</span>
+</pre></div>
+</div>
+<p>(&gt;&gt;= id) = join と、join を再構成することができました。</p>
+<p>更に、join の Monad 則からスタートしてごちゃごちゃいじると:</p>
+<div class="highlight-haskell"><div class="highlight"><pre>   <span class="n">join</span> <span class="o">.</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">id</span>
+<span class="ow">=&gt;</span> <span class="n">join</span> <span class="p">(</span><span class="n">return</span> <span class="p">(</span><span class="n">f</span> <span class="n">x</span><span class="p">))</span> <span class="ow">=</span> <span class="n">f</span> <span class="n">x</span>       <span class="c1">-- 両辺を f x に作用させた</span>
+<span class="ow">=&gt;</span> <span class="n">join</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span> <span class="p">(</span><span class="n">return</span> <span class="n">x</span><span class="p">))</span> <span class="ow">=</span> <span class="n">f</span> <span class="n">x</span> <span class="c1">-- return と liftM の関係を使った</span>
+<span class="ow">=&gt;</span> <span class="p">(</span><span class="n">return</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span> <span class="ow">=</span> <span class="n">f</span> <span class="n">x</span>          <span class="c1">-- (&gt;&gt;=) の定義</span>
+
+   <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">return</span><span class="p">)</span> <span class="ow">=</span> <span class="n">id</span>
+<span class="ow">=&gt;</span> <span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">return</span><span class="p">))</span> <span class="n">x</span> <span class="ow">=</span> <span class="n">x</span>   <span class="c1">-- 両辺を x に作用させた</span>
+<span class="ow">=&gt;</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">x</span>                <span class="c1">-- (&gt;&gt;=) の定義</span>
+</pre></div>
+</div>
+<p>と前半の 2 つは直ぐに分かります。</p>
+<div class="figure align-center">
+<img alt="images/bind_unit.png" src="images/bind_unit.png" />
+<p class="caption">(&gt;&gt;=) と return の関係のイメージ</p>
+<div class="legend">
+左は join . return = id、右は liftM id = id を思い出す</div>
+</div>
+<p>最後の 1 つに関しても:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">join</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">g</span><span class="p">))</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">$</span> <span class="n">x</span>
+<span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">g</span><span class="p">)</span> <span class="o">.</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">$</span> <span class="n">x</span>               <span class="c1">-- join と liftM の関係</span>
+<span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">g</span><span class="p">)</span> <span class="o">$</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span>                            <span class="c1">-- (&gt;&gt;=) の定義</span>
+<span class="ow">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span>                                       <span class="c1">-- (&gt;&gt;=) の定義</span>
+
+<span class="nf">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">join</span><span class="p">)</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">g</span><span class="p">))</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">$</span> <span class="n">x</span>
+<span class="ow">=</span> <span class="n">join</span> <span class="p">(</span><span class="n">liftM</span> <span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">g</span><span class="p">)</span> <span class="o">.</span> <span class="n">f</span><span class="p">)</span> <span class="n">x</span><span class="p">)</span>                 <span class="c1">-- liftM への仮定の 2 つめ</span>
+<span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">g</span><span class="p">)</span> <span class="o">.</span> <span class="n">f</span><span class="p">)</span>                          <span class="c1">-- (&gt;&gt;=) の定義</span>
+<span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">))</span>                             <span class="c1">-- lambda で書いて (&gt;&gt;=) の定義</span>
+
+   <span class="n">join</span> <span class="o">.</span> <span class="n">join</span> <span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">join</span><span class="p">)</span>
+<span class="ow">=&gt;</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span> <span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>と (&gt;&gt;=) に書き直すことができました。</p>
+<p>図で見るならこう:</p>
+<div class="figure align-center">
+<img alt="images/bind_associative.png" src="images/bind_associative.png" />
+<p class="caption">(&gt;&gt;=) の結合律を join のそれから</p>
+<div class="legend">
+左は (y -&gt; (f y &gt;&gt;= g)) の図で、これを liftM して join、つまり (&gt;&gt;= (y -&gt; (f y &gt;&gt;= g))) してるのが右の図の大回りの赤い道。今まで見てきたことから a b から a d への道筋はどれを選んでも等しいので、特に 2 つの赤い道も等しい。</div>
+</div>
+<p>まとめて:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="n">return</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span> <span class="ow">=</span> <span class="n">f</span> <span class="n">x</span>
+<span class="nf">x</span> <span class="o">&gt;&gt;=</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">x</span>
+<span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span> <span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>そう、これが (&gt;&gt;=) に関する Monad 則です。join の Monad 則と、return や liftM との関係・仮定を用いて、(&gt;&gt;=) の Monad 則を導くことができました。</p>
+</div>
+<div class="section" id="haskell-monad">
+<h3>そろそろ Haskell の Monad に帰ろうじゃないか<a class="headerlink" href="#haskell-monad" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>join なんて引っぱりだして遠回りしましたが、Haskell の Monad ってのは:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kr">class</span> <span class="kt">Monad</span> <span class="n">a</span> <span class="kr">where</span>
+  <span class="n">return</span> <span class="ow">::</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+  <span class="p">(</span><span class="o">&gt;&gt;=</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+  <span class="p">(</span><span class="o">&gt;&gt;</span><span class="p">)</span> <span class="ow">::</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">c</span>
+  <span class="n">fail</span> <span class="ow">::</span> <span class="kt">String</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="n">b</span>
+</pre></div>
+</div>
+<p>で定義されている type class でした。で、特に return と (&gt;&gt;=) にだけ注目して (&gt;&gt;) と fail は無視することにしてしまいました。:info で見ても出てきませんが、Monad の instance を作るときに作者は次の 3 つの等式が成り立つことを保証しなくてはいけません:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="n">return</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span> <span class="ow">=</span> <span class="n">f</span> <span class="n">x</span>
+<span class="nf">x</span> <span class="o">&gt;&gt;=</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">x</span>
+<span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span> <span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>これが Monad 則というやつで、コンピュータにこれを保証しろというのは難しいので人間が実装するときに保証するわけです。</p>
+<p>で、join や liftM というのはちゃんと Control.Monad で定義されていまして:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">join</span> <span class="ow">=</span> <span class="p">(</span><span class="o">&gt;&gt;=</span> <span class="n">id</span><span class="p">)</span>
+<span class="nf">liftM</span> <span class="n">f</span> <span class="n">x</span> <span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="n">return</span> <span class="o">.</span> <span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>となっています。この定義と (&gt;&gt;=) の Monad 則から:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">liftM</span> <span class="n">id</span> <span class="ow">=</span> <span class="n">id</span>
+<span class="nf">liftM</span> <span class="p">(</span><span class="n">f</span> <span class="o">.</span> <span class="n">g</span><span class="p">)</span> <span class="ow">=</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">g</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">.</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">return</span> <span class="o">.</span> <span class="n">f</span>
+<span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="o">.</span> <span class="n">join</span> <span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">))</span>
+
+<span class="nf">join</span> <span class="o">.</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">id</span>
+<span class="nf">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">return</span><span class="p">)</span> <span class="ow">=</span> <span class="n">id</span>
+<span class="nf">join</span> <span class="o">.</span> <span class="n">join</span> <span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">join</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>といった等式が再現される、はず。</p>
+<p>なので、どちらが偉いとかではなく、分かり易いときに分かり易い方を選べばいいのです。</p>
+</div>
+<div class="section" id="id9">
+<h3>じゃぁ何で join で説明したのよ、(&gt;&gt;=) のこと嫌いなんでしょ!<a class="headerlink" href="#id9" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>や、でも、実際 join って使うんでしょうか? Haskell でのプログラミング経験もそんなにないですが、でも join は使ったことがありません。何故でしょう? それはきっと Monad の何が嬉しいかっということに関係してくる、はず。</p>
+<p>Monad の何が嬉しいか、そう、それですよね。Monad とか言われて具体例を知って、何だか便利そうなことは分かっても、じゃぁ Monad って何でしょう? と問われると答えられないわけです。でもそれではあんまりだと思ったのでちょっと考えました。で、何が嬉しいかっていうと、関数の返り値の構造を豊かにできるのが嬉しいのだな、と思いました。</p>
+<p>型で言うと Monad a =&gt; b -&gt; a c のこと。そう、(&gt;&gt;=) の右側に来る奴のことです。</p>
+<ul class="simple">
+<li>Maybe だったら普通の値を返すしかないところを Nothing も取る可能性を与え</li>
+<li>List は非決定的な計算とか言ってるけどまぁ、有り得る返り値の集まりを返し</li>
+<li>IO だったら副作用を含むことを示し</li>
+<li>Reader/Writer/State などは計算の返り値とは別に状態を保持し</li>
+<li>Cont は返り値を使って残りの計算がどのようにされるかの設計図を返し</li>
+</ul>
+<p>と、b -&gt; a c は、そもそもある計算に加え何かしらの付加情報を与えています。で、その計算を 1 つだけしても仕方無いでしょ? 返り値を使ってまた計算して返り値を使ってまた計算して、そして大きな計算をしたいわけでしょ? というわけで b -&gt; a c を繋げて・合成していきたいわけです。それが正に:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span> <span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>ではないですか。これは「順々に作用させる」のと「合成させたのを作用させる」のが同じだって言ってますもん。正に Monad の嬉しいことに関する性質を一言で表現してくれて、いるとは言い難い、けど、表現してる。スタートの x は return b でも何でもいいんです。その後で、f をして g をして、と、付加情報を使いながら計算を続けていけることが素敵なんです。で、それを表すのには join よりも (&gt;&gt;=) の方がよっぽど素敵なんです。素敵とかいって適当に褒めてはいけません、使い易いしやりたいことずばりそれを表現してくれているのです。</p>
+<p>なので、Haskell で Monad を説明したかったらそりゃ (&gt;&gt;=) の使い方を知ろうってことになると思うんですが、私は join が分かって何したいのかが少し分かるようになったので join から話を流してみました。</p>
+</div>
+</div>
+<div class="section" id="id10">
+<h2>Monad はこれだけじゃないんだよ<a class="headerlink" href="#id10" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>Monad の定義を 2 つ見ました</p>
+<ul class="simple">
+<li>return, (&gt;&gt;=), Monad 則</li>
+<li>liftM, return, join, liftM 関連の性質, Monad 則</li>
+</ul>
+<p>2 つ見ただけで十分疲れちゃいましたけど、まだあるんです。</p>
+<div class="section" id="kleisli">
+<h3>Kleisli 合成<a class="headerlink" href="#kleisli" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>それがこれ:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="c1">-- | Left-to-right Kleisli composition of monads.</span>
+<span class="p">(</span><span class="o">&gt;=&gt;</span><span class="p">)</span>       <span class="ow">::</span> <span class="kt">Monad</span> <span class="n">m</span> <span class="ow">=&gt;</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">m</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">m</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">m</span> <span class="n">c</span><span class="p">)</span>
+<span class="nf">f</span> <span class="o">&gt;=&gt;</span> <span class="n">g</span>     <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span>
+</pre></div>
+</div>
+<p>ここまで Hugs でがんばってきましたか、ちょびっと GHC からソースを借りてきました。定義を見ると、(&gt;&gt;=) の Monad 則の最後の f と g が出てくるやつ:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span> <span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>の右辺の右側とそっくりそのままですね。a -&gt; m b の形の関数の合成を表してるのが (&gt;=&gt;) です。</p>
+<div class="figure align-center">
+<img alt="images/trinity.png" src="images/trinity.png" />
+<p class="caption">三位一体のモナド</p>
+</div>
+<p>さて、これを使うと Monad 則は:</p>
+<div class="highlight-haskell"><div class="highlight"><pre>   <span class="p">(</span><span class="n">return</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span> <span class="ow">=</span> <span class="n">f</span> <span class="n">x</span>
+<span class="ow">=&gt;</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="n">return</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="n">x</span> <span class="ow">=</span> <span class="n">f</span> <span class="n">x</span>   <span class="c1">-- lambda で書いてみた</span>
+<span class="ow">=&gt;</span> <span class="n">return</span> <span class="o">&gt;=&gt;</span> <span class="n">f</span> <span class="ow">=</span> <span class="n">f</span>                 <span class="c1">-- (&gt;=&gt;) の定義</span>
+
+   <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">x</span>
+<span class="ow">=&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">f</span> <span class="n">x</span>           <span class="c1">-- x を f x に置き換え</span>
+<span class="ow">=&gt;</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">y</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">return</span><span class="p">)</span> <span class="n">x</span> <span class="ow">=</span> <span class="n">f</span> <span class="n">x</span> <span class="c1">-- lambda で書いてみた</span>
+<span class="ow">=&gt;</span> <span class="n">f</span> <span class="o">&gt;=&gt;</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">f</span>
+
+   <span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span> <span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">))</span>
+<span class="ow">=&gt;</span> <span class="p">(</span><span class="n">h</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span> <span class="ow">=</span> <span class="p">(</span><span class="n">h</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">))</span>           <span class="c1">-- x を h x に置き換え</span>
+<span class="ow">=&gt;</span> <span class="p">((</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">h</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">))</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span> <span class="ow">=</span> <span class="p">(</span><span class="nf">\</span><span class="n">z</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">h</span> <span class="n">z</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="p">(</span><span class="n">f</span> <span class="o">&gt;=&gt;</span> <span class="n">g</span><span class="p">))</span> <span class="c1">-- lambda にしてみた</span>
+<span class="ow">=&gt;</span> <span class="p">((</span><span class="n">h</span> <span class="o">&gt;=&gt;</span> <span class="n">f</span><span class="p">)</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span> <span class="ow">=</span> <span class="n">h</span> <span class="o">&gt;=&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">&gt;=&gt;</span> <span class="n">g</span><span class="p">)</span>                       <span class="c1">-- (&gt;=&gt;) の定義</span>
+<span class="ow">=&gt;</span> <span class="p">(</span><span class="nf">\</span><span class="n">z</span> <span class="ow">-&gt;</span> <span class="p">((</span><span class="n">h</span> <span class="o">&gt;=&gt;</span> <span class="n">f</span><span class="p">)</span> <span class="n">z</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">)</span> <span class="n">x</span> <span class="ow">=</span> <span class="n">h</span> <span class="o">&gt;=&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">&gt;=&gt;</span> <span class="n">g</span><span class="p">)</span>             <span class="c1">-- も一度 lambda にしてみた</span>
+<span class="ow">=&gt;</span> <span class="p">(</span><span class="n">h</span> <span class="o">&gt;=&gt;</span> <span class="n">f</span><span class="p">)</span> <span class="o">&gt;=&gt;</span> <span class="n">g</span> <span class="ow">=</span> <span class="n">h</span> <span class="o">&gt;=&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">&gt;=&gt;</span> <span class="n">g</span><span class="p">)</span>                           <span class="c1">-- (&gt;=&gt;) の定義</span>
+</pre></div>
+</div>
+<p>つまり、次の 3 つに書き換えられます:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="nf">return</span> <span class="o">&gt;=&gt;</span> <span class="n">f</span> <span class="ow">=</span> <span class="n">f</span>
+<span class="nf">f</span> <span class="o">&gt;=&gt;</span> <span class="n">return</span> <span class="ow">=</span> <span class="n">f</span>
+<span class="p">(</span><span class="n">f</span> <span class="o">&gt;=&gt;</span> <span class="n">g</span><span class="p">)</span> <span class="o">&gt;=&gt;</span> <span class="n">h</span> <span class="ow">=</span> <span class="n">f</span> <span class="o">&gt;=&gt;</span> <span class="p">(</span><span class="n">g</span> <span class="o">&gt;=&gt;</span> <span class="n">h</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>これが (&gt;=&gt;) の Monad 則になります。これは、何かとってもコンパクトですね。(&gt;=&gt;) を * に、return を E に、f,g,h を A,B,C に書き換えてみると:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="kt">E</span> <span class="o">*</span> <span class="kt">A</span> <span class="ow">=</span> <span class="kt">A</span>
+<span class="kt">A</span> <span class="o">*</span> <span class="kt">E</span> <span class="ow">=</span> <span class="kt">A</span>
+<span class="p">(</span><span class="kt">A</span> <span class="o">*</span> <span class="kt">B</span><span class="p">)</span> <span class="o">*</span> <span class="kt">C</span> <span class="ow">=</span> <span class="kt">A</span> <span class="o">*</span> <span class="p">(</span><span class="kt">B</span> <span class="o">*</span> <span class="kt">C</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>おぉぉ。これは数学のモノイドってやつの性質そっくりです。</p>
+<ul class="simple">
+<li>E は左から掛けても相手を変えない (左単位元)</li>
+<li>E は右から掛けても相手を変えない (右単位元)</li>
+<li>3 つのものの * の計算は、その順序に依らない (結合法則)</li>
+</ul>
+<p>でも、f &gt;=&gt; g の場合、f の行き先の型と g の引数の型が対応してなきゃいけなかったりして、ちょっと違います。モノイドと似てるから Monad って言う、かどうかは良く知りません。</p>
+<p>で、ここで気をつけなくてはいけないのは、単位元は return であって id ではないということです。や、ほら、id って何もしないから、単位元っぽいじゃないですかぁ〜。っていうかぁ〜、普通の関数の合成に関しては単位元じゃないですかぁ〜。でも違うみたいです、でも、id :: (m a) -&gt; m (a) と思えば id だって (&gt;=&gt;) に入れられるのです。それどころか:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="n">id</span> <span class="o">&gt;=&gt;</span> <span class="n">f</span><span class="p">)</span> <span class="n">x</span>
+<span class="ow">=</span> <span class="p">(</span><span class="nf">\</span><span class="n">y</span> <span class="ow">-&gt;</span> <span class="n">id</span> <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="n">x</span>
+<span class="ow">=</span> <span class="p">(</span><span class="n">id</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span>
+<span class="ow">=</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">f</span>
+</pre></div>
+</div>
+<p>というわけで (&gt;=&gt;) から (&gt;&gt;=) が復元できました。あとはもぉ、行ったり来たりするだけです。Monad ってのは関数の返り値の空間を豊かにすることで関数を拡張し、その拡張された関数の合成まで上手く定義したもの、と思うのであれば (&gt;=&gt;) はとっても素敵な演算子に見えてきます。</p>
+<p>join = (id &gt;=&gt; id) か、訳分かりませんね、ここまでくると:</p>
+<div class="highlight-haskell"><div class="highlight"><pre><span class="p">(</span><span class="o">&gt;&gt;=</span> <span class="n">f</span><span class="p">)</span> <span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">f</span><span class="p">)</span> <span class="ow">=</span> <span class="n">id</span> <span class="o">&gt;=&gt;</span> <span class="n">f</span>
+<span class="nf">join</span> <span class="ow">=</span> <span class="p">(</span><span class="o">&gt;&gt;=</span> <span class="n">id</span><span class="p">)</span> <span class="ow">=</span> <span class="p">(</span><span class="n">id</span> <span class="o">&gt;=&gt;</span> <span class="n">id</span><span class="p">)</span>
+<span class="nf">f</span> <span class="o">&gt;=&gt;</span> <span class="n">g</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="n">x</span> <span class="o">&gt;&gt;=</span> <span class="n">g</span><span class="p">)</span> <span class="ow">=</span> <span class="n">join</span> <span class="o">.</span> <span class="p">(</span><span class="n">liftM</span> <span class="n">g</span><span class="p">)</span> <span class="o">.</span> <span class="n">f</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id11">
+<h3>これで Monad のこともばっちりだね!!<a class="headerlink" href="#id11" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>ん〜、どうなんでしょう、そうなんでしょうか。ばっちりって何でしょうか。</p>
+<p>Monad なんてのは結局ただの type class なのです。似たような操作が沢山あるから、どれでも記号 1 つで使えるようにしてもらったに過ぎません。Monad のこと分かったから世の中に転がってる色々な Monad instance が使いこなせるというわけではありませんし。</p>
+<p>世の中の Monad instance 達を使いこなすことによって Monad が分かったと言うならば、ここでやっと Monad のスタート地点に立ったということかもしれません。 <a class="reference external" href="http://www.tokyo-tosho.co.jp/books/ISBN978-4-489-02053-7.html">数学は言葉</a> であって、文法や慣用句憶えても作品を楽しむにはまた違った苦労が必要なわけです。</p>
+<p>でもまぁ、 <a class="reference external" href="http://www.aoky.net/articles/james_iry/brief-incomplete-and-mostly-wrong.htm">「モナドは単なる自己関手の圏におけるモノイド対象だよ。何か問題でも？」</a> って言ってもいいですけど「モナド? あぁあの入れたり剥いだり中いじったりするやつね」って言えるのも素敵だなって思うんです。</p>
+</div>
+</div>
+<div class="section" id="id14">
+<h2>参考資料<a class="headerlink" href="#id14" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://stefan-klinger.de/files/monadGuide.pdf">http://stefan-klinger.de/files/monadGuide.pdf</a></li>
+<li><a class="reference external" href="http://folli.loria.fr/cds/1999/library/pdf/barrwells.pdf">http://folli.loria.fr/cds/1999/library/pdf/barrwells.pdf</a></li>
+</ul>
+<p>圏論の最初から真面目に書いてあるので、読めれば分かるっていう感じの。って前者は適当に読んだんですが後者はあんま読んでません。ごめんなさい。</p>
+<ul class="simple">
+<li><a class="reference external" href="http://snak.tdiary.net/20091020.html">http://snak.tdiary.net/20091020.html</a></li>
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Monad_(functional_programming">http://en.wikipedia.org/wiki/Monad_(functional_programming</a>)</li>
+<li><a class="reference external" href="http://en.wikibooks.org/wiki/Haskell/Category_theory">http://en.wikibooks.org/wiki/Haskell/Category_theory</a></li>
+</ul>
+<p><a class="reference external" href="http://themonadreader.wordpress.com/">The Monad.Reader</a> の <a class="reference external" href="http://haskell.org/sitewiki/images/8/85/TMR-Issue13.pdf">Issue 13</a> の The Typeclassopedia を日本語に訳して下さってる方がいらっしゃいまして、ありがたいことです。join に関しては Wiki にも書いてあるよ、と書いてあったので貼っておきます。(&gt;=&gt;) のことも書いてあります。</p>
+<p class="rubric">脚注</p>
+<table class="docutils footnote" frame="void" id="eagletmt" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>リテラルの解釈と型の変換と勘違いしてました。教えてくれた <a class="reference external" href="http://twitter.com/eagletmt/status/15267869845">&#64;eagletmt</a> さん、ありがとう!</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">目次</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">モナドって結局何なのよ?</a><ul>
+<li><a class="reference internal" href="#haskell">そもそも Haskell って何なのよ?</a></li>
+<li><a class="reference internal" href="#type-class">type class って何なのよ? </a><ul>
+<li><a class="reference internal" href="#monad">数字のことはいいから Monad はどうなったのよ</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id3">Monad って何なのよ?</a><ul>
+<li><a class="reference internal" href="#return">return は箱に入れること</a></li>
+<li><a class="reference internal" href="#liftm">箱に入れたら liftM でアクセス!!</a></li>
+<li><a class="reference internal" href="#join">(&gt;&gt;=) は分かりづらいから join にしよう</a></li>
+<li><a class="reference internal" href="#id4">join は箱を剥すこと</a></li>
+<li><a class="reference internal" href="#id5">ここまでまとめ</a></li>
+<li><a class="reference internal" href="#return-liftm-join">return と liftM と join の○○な関係</a></li>
+<li><a class="reference internal" href="#id6">Monad とは</a></li>
+<li><a class="reference internal" href="#join-to">join to (&gt;&gt;=)</a></li>
+<li><a class="reference internal" href="#id8">(&gt;&gt;=) のことをもう少し</a></li>
+<li><a class="reference internal" href="#haskell-monad">そろそろ Haskell の Monad に帰ろうじゃないか</a></li>
+<li><a class="reference internal" href="#id9">じゃぁ何で join で説明したのよ、(&gt;&gt;=) のこと嫌いなんでしょ!</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id10">Monad はこれだけじゃないんだよ</a><ul>
+<li><a class="reference internal" href="#kleisli">Kleisli 合成</a></li>
+<li><a class="reference internal" href="#id11">これで Monad のこともばっちりだね!!</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id14">参考資料</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>前のトピックへ</h4>
+  <p class="topless"><a href="index.html"
+                        title="前の章へ">join to Monad</a></p>
+  <h3>このページ</h3>
+  <ul class="this-page-menu">
+    <li><a href="sources/join_to_Monad.txt"
+           rel="nofollow">ソースコードを表示</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>クイック検索</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="検索" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    モジュール、クラス、または関数名を入力してください
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>ナビゲーション</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="総合索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="index.html" title="join to Monad"
+             >前へ</a> |</li>
+        <li><a href="index.html">join to Monad v0.1.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, _2F_1.
+      このドキュメントは <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.6 で生成しました。
+    </div>
+  </body>
+</html>
